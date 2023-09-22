@@ -1,5 +1,6 @@
 package com.alicloud.openservices.tablestore.jdbc;
 
+import java.time.Instant;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -120,6 +121,14 @@ public class OTSPreparedStatementTest {
         Assert.assertEquals("SELECT * FROM t WHERE a = x'5461626c6553746f7265'", statement.interpolateParameters());
         statement.setURL(1, new URL("https://google.com"));
         Assert.assertEquals("SELECT * FROM t WHERE a = 'https://google.com'", statement.interpolateParameters());
+
+        // test datetime/time/date
+        statement.setTimestamp(1, Timestamp.from(Instant.ofEpochSecond(1692841131)));
+        Assert.assertEquals("SELECT * FROM t WHERE a = FROM_UNIXTIME(1692841131)", statement.interpolateParameters());
+        statement.setTime(1, Time.valueOf("12:34:56"));
+        Assert.assertEquals("SELECT * FROM t WHERE a = TIME('12:34:56')", statement.interpolateParameters());
+        statement.setDate(1, Date.valueOf("2020-01-01"));
+        Assert.assertEquals("SELECT * FROM t WHERE a = DATE('2020-01-01')", statement.interpolateParameters());
     }
 
     @Test
@@ -178,9 +187,6 @@ public class OTSPreparedStatementTest {
         PreparedStatement statement = connection.prepareStatement("SELECT * FROM t WHERE a = ?");
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setArray(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setDate(1, null, null));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setDate(1, null));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setTime(1, null));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setTimestamp(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setRef(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setRowId(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> statement.setSQLXML(1, null));

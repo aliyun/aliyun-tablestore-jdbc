@@ -13,7 +13,7 @@
 <dependency>
   <groupId>com.aliyun.openservices</groupId>
   <artifactId>tablestore-jdbc</artifactId>
-  <version>5.13.15</version>
+  <version>5.16.1</version>
 </dependency>
 ```
 

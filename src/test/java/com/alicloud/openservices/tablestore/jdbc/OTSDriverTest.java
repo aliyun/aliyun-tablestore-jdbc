@@ -237,6 +237,24 @@ public class OTSDriverTest {
     }
 
     @Test
+    public void testDateTime() throws SQLException {
+        Connection connection = DriverManager.getConnection(testEnvironment.getURL(), testEnvironment.getUser(), testEnvironment.getPassword());
+        Statement statement = connection.createStatement();
+        statement.executeQuery("SELECT FROM_UNIXTIME(1692841131), TIME('12:34:56'), DATE('1926-08-17')");
+        ResultSet resultSet = statement.getResultSet();
+        resultSet.next();
+        // datetime
+        Assert.assertEquals(Types.TIMESTAMP, resultSet.getMetaData().getColumnType(1));
+        Assert.assertEquals(new Timestamp(1692841131000L - 28800000), resultSet.getTimestamp(1));
+        // time
+        Assert.assertEquals(Types.TIME, resultSet.getMetaData().getColumnType(2));
+        Assert.assertEquals(Time.valueOf("12:34:56"), resultSet.getTime(2));
+        // date
+        Assert.assertEquals(Types.DATE, resultSet.getMetaData().getColumnType(3));
+        Assert.assertEquals(Date.valueOf("1926-08-17"), resultSet.getDate(3));
+    }
+
+    @Test
     public void testPropertyConfiguration() throws SQLException {
         // test getConnection
         Properties properties = new Properties();

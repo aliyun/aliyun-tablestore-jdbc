@@ -88,6 +88,12 @@ public class OTSPreparedStatement extends OTSStatement implements PreparedStatem
             return StringUtils.quoteIdentifier(x.toString(), OTSDatabaseMetaData.quoteString);
         } else if (x instanceof byte[]) {
             return String.format("x'%s'", Hex.encodeHexString((byte[]) x));
+        } else if (x instanceof Timestamp) {
+            return String.format("FROM_UNIXTIME(%d)", ((Timestamp) x).getTime() / 1000);
+        } else if (x instanceof Time) {
+            return String.format("TIME('%s')", x);
+        } else if (x instanceof Date) {
+            return String.format("DATE('%s')", x);
         } else {
             throw new SQLException("unrecognized Java class: " + x.getClass().getName());
         }
@@ -323,7 +329,10 @@ public class OTSPreparedStatement extends OTSStatement implements PreparedStatem
                 || x instanceof Double
                 || x instanceof Long
                 || x instanceof BigDecimal
-                || x instanceof byte[]) {
+                || x instanceof byte[]
+                || x instanceof Timestamp
+                || x instanceof Time
+                || x instanceof Date) {
             parameters.put(parameterIndex - 1, x);
         } else if (x instanceof Reader) {
             setCharacterStream(parameterIndex, (Reader) x);
@@ -356,7 +365,11 @@ public class OTSPreparedStatement extends OTSStatement implements PreparedStatem
     }
 
     public void setDate(int parameterIndex, Date x) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        if (x == null) {
+            setNull(parameterIndex, Types.NULL);
+        } else {
+            setObject(parameterIndex, x);
+        }
     }
 
     @Override
@@ -396,12 +409,20 @@ public class OTSPreparedStatement extends OTSStatement implements PreparedStatem
 
     @Override
     public void setTime(int parameterIndex, Time x) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        if (x == null) {
+            setNull(parameterIndex, Types.NULL);
+        } else {
+            setObject(parameterIndex, x);
+        }
     }
 
     @Override
     public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        if (x == null) {
+            setNull(parameterIndex, Types.NULL);
+        } else {
+            setObject(parameterIndex, x);
+        }
     }
 
     @Override

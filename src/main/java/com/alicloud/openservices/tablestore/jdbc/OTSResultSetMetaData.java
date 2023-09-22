@@ -59,6 +59,12 @@ public class OTSResultSetMetaData extends WrapperAdapter implements ResultSetMet
                 return String.class.getName();
             case BINARY:
                 return byte[].class.getName();
+            case DATETIME:
+                return java.sql.Timestamp.class.getName();
+            case TIME:
+                return java.sql.Time.class.getName();
+            case DATE:
+                return java.sql.Date.class.getName();
             default:
                 return null;
         }
@@ -83,6 +89,12 @@ public class OTSResultSetMetaData extends WrapperAdapter implements ResultSetMet
                 return OTSDatabaseMetaData.MAX_STRING_LENGTH;
             case BINARY:
                 return OTSDatabaseMetaData.MAX_BINARY_LENGTH;
+            case DATETIME:
+                return 19;  // 2019-01-01 00:00:00
+            case TIME:
+                return 8;   // 00:00:00
+            case DATE:
+                return 10;  // 2019-01-01
             default:
                 return 0;
         }
@@ -112,6 +124,12 @@ public class OTSResultSetMetaData extends WrapperAdapter implements ResultSetMet
                 return Types.VARCHAR;
             case BINARY:
                 return Types.VARBINARY;
+            case DATETIME:
+                return Types.TIMESTAMP;
+            case TIME:
+                return Types.TIME;
+            case DATE:
+                return Types.DATE;
             default:
                 return 0;
         }
@@ -131,6 +149,12 @@ public class OTSResultSetMetaData extends WrapperAdapter implements ResultSetMet
                 return "VARCHAR";
             case BINARY:
                 return "VARBINARY";
+            case DATETIME:
+                return "TIMESTAMP";
+            case TIME:
+                return "TIME";
+            case DATE:
+                return "DATE";
             default:
                 return null;
         }

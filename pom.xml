@@ -6,7 +6,7 @@
 
     <groupId>com.aliyun.openservices</groupId>
     <artifactId>tablestore-jdbc</artifactId>
-    <version>5.13.15</version>
+    <version>5.16.1</version>
     <name>Aliyun TableStore JDBC Driver</name>  
     <url>http://www.aliyun.com</url>  
     <description>Aliyun TableStore JDBC Driver Copyright (C) Alibaba Cloud Computing All rights reserved. 版权所有 （C）阿里云计算有限公司 http://www.aliyun.com</description>  
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>com.aliyun.openservices</groupId>
             <artifactId>tablestore</artifactId>
-            <version>5.13.15</version>
+            <version>5.16.1</version>
             <classifier>jar-with-dependencies</classifier>
         </dependency>
 

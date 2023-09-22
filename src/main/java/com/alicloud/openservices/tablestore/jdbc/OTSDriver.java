@@ -13,8 +13,8 @@ public class OTSDriver implements Driver {
     static final int OTS_JDBC_MAJOR_VERSION = 4;
     static final int OTS_JDBC_MINOR_VERSION = 2;
     static final int OTS_DRIVER_MAJOR_VERSION = 5;
-    static final int OTS_DRIVER_MINOR_VERSION = 13;
-    static final String OTS_DRIVER_VERSION = "5.13.15";
+    static final int OTS_DRIVER_MINOR_VERSION = 16;
+    static final String OTS_DRIVER_VERSION = "5.16.1";
 
     static {
         try {

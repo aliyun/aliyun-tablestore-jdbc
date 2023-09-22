@@ -14,6 +14,10 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.sql.*;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.*;
 
 
@@ -237,7 +241,11 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
         Object value = getObject(columnIndex);
         if (value == null) {
             return null;
-        } else if (!(value instanceof ByteBuffer) && !(value instanceof String)) {
+        } else if (!(value instanceof ByteBuffer)
+                && !(value instanceof String)
+                && !(value instanceof ZonedDateTime)
+                && !(value instanceof Duration)
+                && !(value instanceof LocalDate)) {
             throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), InputStream.class.getName()));
         }
         return new ByteArrayInputStream(getBytes(columnIndex));
@@ -254,7 +262,11 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
         Object value = getObject(columnIndex);
         if (value == null) {
             return null;
-        } else if (!(value instanceof ByteBuffer) && !(value instanceof String)) {
+        } else if (!(value instanceof ByteBuffer)
+                && !(value instanceof String)
+                && !(value instanceof ZonedDateTime)
+                && !(value instanceof Duration)
+                && !(value instanceof LocalDate)) {
             throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), Blob.class.getName()));
         }
         return new SerialBlob(getBytes(columnIndex));
@@ -315,7 +327,15 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
             return null;
         } else if (value instanceof ByteBuffer) {
             return unwrapByteBuffer((ByteBuffer) value);
-        } else if (value instanceof Long || value instanceof Double || value instanceof Boolean || value instanceof String) {
+        } else if (value instanceof ZonedDateTime) {
+            return Timestamp.valueOf(((ZonedDateTime) value).toLocalDateTime()).toString().getBytes();
+        } else if (value instanceof Duration) {
+            return String.valueOf(LocalTime.MIDNIGHT.plus((Duration) value)).getBytes();
+        } else if (value instanceof Long
+                || value instanceof Double
+                || value instanceof Boolean
+                || value instanceof String
+                || value instanceof LocalDate) {
             return value.toString().getBytes();
         } else {
             throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), byte[].class.getName()));
@@ -333,7 +353,11 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
         Object value = getObject(columnIndex);
         if (value == null) {
             return null;
-        } else if (!(value instanceof ByteBuffer) && !(value instanceof String)) {
+        } else if (!(value instanceof ByteBuffer)
+                && !(value instanceof String)
+                && !(value instanceof ZonedDateTime)
+                && !(value instanceof Duration)
+                && !(value instanceof LocalDate)) {
             throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), Reader.class.getName()));
         }
         return new CharArrayReader(getString(columnIndex).toCharArray());
@@ -350,7 +374,11 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
         Object value = getObject(columnIndex);
         if (value == null) {
             return null;
-        } else if (!(value instanceof ByteBuffer) && !(value instanceof String)) {
+        } else if (!(value instanceof ByteBuffer)
+                && !(value instanceof String)
+                && !(value instanceof ZonedDateTime)
+                && !(value instanceof Duration)
+                && !(value instanceof LocalDate)) {
             throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), Clob.class.getName()));
         }
         return new SerialClob(getString(columnIndex).toCharArray());
@@ -374,12 +402,21 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
 
     @Override
     public java.sql.Date getDate(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        Object value = getObject(columnIndex);
+        if (value == null) {
+            return null;
+        } else if (value instanceof String) {
+            return java.sql.Date.valueOf((String) value);
+        } else if (value instanceof LocalDate) {
+            return java.sql.Date.valueOf((LocalDate) value);
+        }
+        throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), java.sql.Date.class.getName()));
     }
 
     @Override
     public java.sql.Date getDate(String columnLabel) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        int columnIndex = findColumn(columnLabel);
+        return getDate(columnIndex);
     }
 
     @Override
@@ -520,7 +557,14 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
             return (String) value;
         } else if (value instanceof ByteBuffer) {
             return new String(unwrapByteBuffer((ByteBuffer) value));
-        } else if (value instanceof Long || value instanceof Double || value instanceof Boolean) {
+        } else if (value instanceof ZonedDateTime) {
+            return Timestamp.valueOf(((ZonedDateTime) value).toLocalDateTime()).toString();
+        } else if (value instanceof Duration) {
+            return String.valueOf(LocalTime.MIDNIGHT.plus((Duration) value));
+        } else if (value instanceof Long
+                || value instanceof Double
+                || value instanceof Boolean
+                || value instanceof LocalDate) {
             return value.toString();
         } else {
             throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), String.class.getName()));
@@ -597,12 +641,21 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
 
     @Override
     public Time getTime(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        Object value = getObject(columnIndex);
+        if (value == null) {
+            return null;
+        } else if (value instanceof String) {
+            return Time.valueOf(LocalTime.parse((String) value));
+        } else if (value instanceof Duration) {
+            return Time.valueOf(LocalTime.MIDNIGHT.plus((Duration) value));
+        }
+        throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), Time.class.getName()));
     }
 
     @Override
     public Time getTime(String columnLabel) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        int columnIndex = findColumn(columnLabel);
+        return getTime(columnIndex);
     }
 
     @Override
@@ -617,12 +670,21 @@ public class OTSResultSet extends WrapperAdapter implements ResultSet {
 
     @Override
     public Timestamp getTimestamp(int columnIndex) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        Object value = getObject(columnIndex);
+        if (value == null) {
+            return null;
+        } else if (value instanceof String) {
+            return Timestamp.valueOf((String) value);
+        } else if (value instanceof ZonedDateTime) {
+            return Timestamp.valueOf(((ZonedDateTime) value).toLocalDateTime());
+        }
+        throw new SQLException(String.format("Unsupported conversion from %s to %s", meta.getColumnTypeName(columnIndex), Timestamp.class.getName()));
     }
 
     @Override
     public Timestamp getTimestamp(String columnLabel) throws SQLException {
-        throw new SQLFeatureNotSupportedException();
+        int columnIndex = findColumn(columnLabel);
+        return getTimestamp(columnIndex);
     }
 
     @Override

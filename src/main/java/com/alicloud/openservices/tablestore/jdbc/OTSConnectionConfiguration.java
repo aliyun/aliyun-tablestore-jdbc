@@ -29,6 +29,9 @@ class OTSConnectionConfiguration {
         }
         OTSConnectionConfiguration configuration = new OTSConnectionConfiguration();
         configuration.endPoint = parsed.getProtocol() + "://" + parsed.getHost();
+        if (parsed.getPort() != -1) {
+            configuration.endPoint += ":" + parsed.getPort();
+        }
         String userInfo = parsed.getUserInfo();
         if (userInfo != null) {
             String[] userPass = userInfo.split(":");

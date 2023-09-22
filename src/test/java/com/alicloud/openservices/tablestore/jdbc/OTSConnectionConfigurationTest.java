@@ -94,6 +94,12 @@ public class OTSConnectionConfigurationTest {
         Assert.assertEquals(defaultConfiguration.getProxyDomain(), clientConfiguration.getProxyDomain());
         Assert.assertEquals(defaultConfiguration.getProxyWorkstation(), clientConfiguration.getProxyWorkstation());
         Assert.assertEquals(defaultConfiguration.getSyncClientWaitFutureTimeoutInMillis(), clientConfiguration.getSyncClientWaitFutureTimeoutInMillis());
+
+        // Connection with customized port
+        connection = DriverManager.getConnection("jdbc:ots:https://example.com:6666/instance_name", "access_key_id", "access_key_secret");
+        Assert.assertTrue(connection instanceof OTSConnection);
+        configuration = ((OTSConnection) connection).config;
+        Assert.assertEquals("https://example.com:6666", configuration.getEndPoint());
     }
 
     @Test

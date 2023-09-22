@@ -13,6 +13,7 @@ import java.math.BigDecimal;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.sql.*;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -339,6 +340,130 @@ public class OTSResultSetTest {
     }
 
     @Test
+    public void testDateTime() throws SQLException, IOException {
+        ResultSet resultSet = new OTSResultSet(
+                new OTSResultSetMetaData(Collections.singletonList("DATETIME"), Collections.singletonList(ColumnType.DATETIME)),
+                Collections.singletonList(new Object[]{ZonedDateTime.ofInstant(Instant.ofEpochMilli(1546300800000L), ZoneId.of("UTC+8"))}));
+        Assert.assertTrue(resultSet.next());
+
+        // test string
+        Assert.assertEquals("2019-01-01 08:00:00.0", resultSet.getString(1));
+        Assert.assertEquals("2019-01-01 08:00:00.0", resultSet.getString("DATETIME"));
+        Assert.assertEquals("2019-01-01 08:00:00.0", resultSet.getNString(1));
+        Assert.assertEquals("2019-01-01 08:00:00.0", resultSet.getNString("DATETIME"));
+        Assert.assertEquals("2019-01-01 08:00:00.0", readString(resultSet.getCharacterStream(1)));
+        Assert.assertEquals("2019-01-01 08:00:00.0", readString(resultSet.getCharacterStream("DATETIME")));
+        Assert.assertEquals("2019-01-01 08:00:00.0", readString(resultSet.getNCharacterStream(1)));
+        Assert.assertEquals("2019-01-01 08:00:00.0", readString(resultSet.getNCharacterStream("DATETIME")));
+        Assert.assertEquals("2019-01-01 08:00:00.0", readString(resultSet.getClob(1).getCharacterStream()));
+        Assert.assertEquals("2019-01-01 08:00:00.0", readString(resultSet.getClob("DATETIME").getCharacterStream()));
+
+        // test bytes
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), resultSet.getBytes(1));
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), resultSet.getBytes("DATETIME"));
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), IOUtils.toByteArray(resultSet.getAsciiStream(1)));
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), IOUtils.toByteArray(resultSet.getAsciiStream("DATETIME")));
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), IOUtils.toByteArray(resultSet.getBinaryStream(1)));
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), IOUtils.toByteArray(resultSet.getBinaryStream("DATETIME")));
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), IOUtils.toByteArray(resultSet.getBlob(1).getBinaryStream()));
+        Assert.assertArrayEquals("2019-01-01 08:00:00.0".getBytes(), IOUtils.toByteArray(resultSet.getBlob("DATETIME").getBinaryStream()));
+
+        // test datetime
+        Assert.assertEquals(new Timestamp(1546300800000L), resultSet.getTimestamp(1));
+        Assert.assertEquals(new Timestamp(1546300800000L), resultSet.getTimestamp("DATETIME"));
+    }
+
+    @Test
+    public void testTime() throws SQLException, IOException {
+        ResultSet resultSet = new OTSResultSet(
+                new OTSResultSetMetaData(Collections.singletonList("TIME"), Collections.singletonList(ColumnType.TIME)),
+                Collections.singletonList(new Object[]{Duration.parse("PT12H34M56S")}));
+        Assert.assertTrue(resultSet.next());
+
+        // test string
+        Assert.assertEquals("12:34:56", resultSet.getString(1));
+        Assert.assertEquals("12:34:56", resultSet.getString("TIME"));
+        Assert.assertEquals("12:34:56", resultSet.getNString(1));
+        Assert.assertEquals("12:34:56", resultSet.getNString("TIME"));
+        Assert.assertEquals("12:34:56", readString(resultSet.getCharacterStream(1)));
+        Assert.assertEquals("12:34:56", readString(resultSet.getCharacterStream("TIME")));
+        Assert.assertEquals("12:34:56", readString(resultSet.getNCharacterStream(1)));
+        Assert.assertEquals("12:34:56", readString(resultSet.getNCharacterStream("TIME")));
+        Assert.assertEquals("12:34:56", readString(resultSet.getClob(1).getCharacterStream()));
+        Assert.assertEquals("12:34:56", readString(resultSet.getClob("TIME").getCharacterStream()));
+
+        // test bytes
+        Assert.assertArrayEquals("12:34:56".getBytes(), resultSet.getBytes(1));
+        Assert.assertArrayEquals("12:34:56".getBytes(), resultSet.getBytes("TIME"));
+        Assert.assertArrayEquals("12:34:56".getBytes(), IOUtils.toByteArray(resultSet.getAsciiStream(1)));
+        Assert.assertArrayEquals("12:34:56".getBytes(), IOUtils.toByteArray(resultSet.getAsciiStream("TIME")));
+        Assert.assertArrayEquals("12:34:56".getBytes(), IOUtils.toByteArray(resultSet.getBinaryStream(1)));
+        Assert.assertArrayEquals("12:34:56".getBytes(), IOUtils.toByteArray(resultSet.getBinaryStream("TIME")));
+        Assert.assertArrayEquals("12:34:56".getBytes(), IOUtils.toByteArray(resultSet.getBlob(1).getBinaryStream()));
+        Assert.assertArrayEquals("12:34:56".getBytes(), IOUtils.toByteArray(resultSet.getBlob("TIME").getBinaryStream()));
+
+        // test time
+        Assert.assertEquals(Time.valueOf("12:34:56"), resultSet.getTime(1));
+        Assert.assertEquals(Time.valueOf("12:34:56"), resultSet.getTime("TIME"));
+    }
+
+    @Test
+    public void testDate() throws SQLException, IOException {
+        ResultSet resultSet = new OTSResultSet(
+                new OTSResultSetMetaData(Collections.singletonList("DATE"), Collections.singletonList(ColumnType.DATE)),
+                Collections.singletonList(new Object[]{LocalDate.parse("2019-01-01")}));
+        Assert.assertTrue(resultSet.next());
+
+        // test string
+        Assert.assertEquals("2019-01-01", resultSet.getString(1));
+        Assert.assertEquals("2019-01-01", resultSet.getString("DATE"));
+        Assert.assertEquals("2019-01-01", resultSet.getNString(1));
+        Assert.assertEquals("2019-01-01", resultSet.getNString("DATE"));
+        Assert.assertEquals("2019-01-01", readString(resultSet.getCharacterStream(1)));
+        Assert.assertEquals("2019-01-01", readString(resultSet.getCharacterStream("DATE")));
+        Assert.assertEquals("2019-01-01", readString(resultSet.getNCharacterStream(1)));
+        Assert.assertEquals("2019-01-01", readString(resultSet.getNCharacterStream("DATE")));
+        Assert.assertEquals("2019-01-01", readString(resultSet.getClob(1).getCharacterStream()));
+        Assert.assertEquals("2019-01-01", readString(resultSet.getClob("DATE").getCharacterStream()));
+
+        // test bytes
+        Assert.assertArrayEquals("2019-01-01".getBytes(), resultSet.getBytes(1));
+        Assert.assertArrayEquals("2019-01-01".getBytes(), resultSet.getBytes("DATE"));
+        Assert.assertArrayEquals("2019-01-01".getBytes(), IOUtils.toByteArray(resultSet.getAsciiStream(1)));
+        Assert.assertArrayEquals("2019-01-01".getBytes(), IOUtils.toByteArray(resultSet.getAsciiStream("DATE")));
+        Assert.assertArrayEquals("2019-01-01".getBytes(), IOUtils.toByteArray(resultSet.getBinaryStream(1)));
+        Assert.assertArrayEquals("2019-01-01".getBytes(), IOUtils.toByteArray(resultSet.getBinaryStream("DATE")));
+        Assert.assertArrayEquals("2019-01-01".getBytes(), IOUtils.toByteArray(resultSet.getBlob(1).getBinaryStream()));
+        Assert.assertArrayEquals("2019-01-01".getBytes(), IOUtils.toByteArray(resultSet.getBlob("DATE").getBinaryStream()));
+
+        // test date
+        Assert.assertEquals(Date.valueOf("2019-01-01"), resultSet.getDate(1));
+        Assert.assertEquals(Date.valueOf("2019-01-01"), resultSet.getDate("DATE"));
+    }
+
+    @Test
+    public void testParseDateTime() throws SQLException {
+        ResultSet resultSet = new OTSResultSet(
+                new OTSResultSetMetaData(Collections.singletonList("STRING"), Collections.singletonList(ColumnType.STRING)),
+                Arrays.asList(new Object[]{"2019-01-01 12:34:56"}, new Object[]{"12:34:56"}, new Object[]{"2019-01-01"}));
+
+        // test datetime
+        Assert.assertTrue(resultSet.next());
+        Assert.assertEquals(Timestamp.valueOf("2019-01-01 12:34:56"), resultSet.getTimestamp(1));
+        Assert.assertEquals(Timestamp.valueOf("2019-01-01 12:34:56"), resultSet.getTimestamp("STRING"));
+
+        // test time
+        Assert.assertTrue(resultSet.next());
+        Assert.assertEquals(Time.valueOf("12:34:56"), resultSet.getTime(1));
+        Assert.assertEquals(Time.valueOf("12:34:56"), resultSet.getTime("STRING"));
+
+        // test date
+        Assert.assertTrue(resultSet.next());
+        Assert.assertEquals(Date.valueOf("2019-01-01"), resultSet.getDate(1));
+        Assert.assertEquals(Date.valueOf("2019-01-01"), resultSet.getDate("STRING"));
+    }
+
+    @Test
     public void testGetTypesNotSupported() throws SQLException {
         ResultSet resultSet = new OTSResultSet(new OTSResultSetMetaData(new ArrayList<>(), new ArrayList<>()), null);
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getBigDecimal(1, 1));
@@ -349,17 +474,11 @@ public class OTSResultSetTest {
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getSQLXML(null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getRef(1));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getRef(null));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getDate(1));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getDate(null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getDate(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getDate(null, null));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTime(1));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTime(null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTime(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTime(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTime(null, null));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTimestamp(1));
-        Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTimestamp(null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTimestamp(1, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getTimestamp(null, null));
         Assert.assertThrows(SQLFeatureNotSupportedException.class, () -> resultSet.getNClob(1));
