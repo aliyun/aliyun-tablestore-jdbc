@@ -1,5 +1,6 @@
 package com.alicloud.openservices.tablestore.jdbc;
 
+import com.alicloud.openservices.tablestore.TableStoreException;
 import com.alicloud.openservices.tablestore.model.sql.SQLQueryRequest;
 import com.alicloud.openservices.tablestore.model.sql.SQLQueryResponse;
 import com.alicloud.openservices.tablestore.model.sql.SQLStatementType;
@@ -90,15 +91,19 @@ public class OTSStatement extends WrapperAdapter implements Statement {
     public boolean execute(String sql) throws SQLException {
         checkClosed();
         SQLQueryRequest request = new SQLQueryRequest(sql);
-        SQLQueryResponse response = this.connection.otsClient.sqlQuery(request);
-        if (response.getSQLStatementType() == SQLStatementType.SQL_SELECT
-                || response.getSQLStatementType() == SQLStatementType.SQL_SHOW_TABLE
-                || response.getSQLStatementType() == SQLStatementType.SQL_DESCRIBE_TABLE) {
-            resultSet = new OTSResultSet(this, response.getSQLResultSet(), resultSetMaxRows);
-            return true;
-        } else {
-            resultSet = null;
-            return false;
+        try {
+            SQLQueryResponse response = this.connection.otsClient.sqlQuery(request);
+            if (response.getSQLStatementType() == SQLStatementType.SQL_SELECT
+                    || response.getSQLStatementType() == SQLStatementType.SQL_SHOW_TABLE
+                    || response.getSQLStatementType() == SQLStatementType.SQL_DESCRIBE_TABLE) {
+                resultSet = new OTSResultSet(this, response.getSQLResultSet(), resultSetMaxRows);
+                return true;
+            } else {
+                resultSet = null;
+                return false;
+            }
+        } catch (TableStoreException e) {
+            throw new SQLException(e);
         }
     }
 
