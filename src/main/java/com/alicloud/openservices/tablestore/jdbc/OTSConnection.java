@@ -1,7 +1,9 @@
 package com.alicloud.openservices.tablestore.jdbc;
 
 
-import com.alicloud.openservices.tablestore.SyncClient;
+import com.alicloud.openservices.tablestore.AsyncClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
@@ -11,6 +13,8 @@ import java.util.Properties;
 import java.util.concurrent.Executor;
 
 public class OTSConnection extends WrapperAdapter implements Connection {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OTSConnection.class);
 
     static final String ACCESS_KEY_ID = "user";
     static final String ACCESS_KEY_SECRET = "password";
@@ -24,6 +28,8 @@ public class OTSConnection extends WrapperAdapter implements Connection {
     static final String RETRY_THREAD_COUNT = "retryThreadCount";
     static final String ENABLE_RESPONSE_CONTENT_MD5_CHECKING = "enableResponseContentMD5Checking";
     static final String RETRY_STRATEGY = "retryStrategy";
+    static final String RETRY_TIMEOUT = "retryTimeout";
+    static final String RETRY_TIMEOUT_UNIT = "retryTimeoutUnit";
     static final String TIME_THRESHOLD_OF_TRACE_LOGGER = "timeThresholdOfTraceLogger";
     static final String TIME_THRESHOLD_OF_SERVER_TRACER = "timeThresholdOfServerTracer";
     static final String PROXY_HOST = "proxyHost";
@@ -37,16 +43,17 @@ public class OTSConnection extends WrapperAdapter implements Connection {
 
     private final String url;
     OTSConnectionConfiguration config;
-    SyncClient otsClient;
+    AsyncClient otsClient;
     private Properties info;
     private boolean isClosed = false;
     private SQLWarning warnings = null;
 
     OTSConnection(String url, Properties info) throws SQLException {
+        LOGGER.debug("create connection with url: " + url);
         this.url = url;
         this.info = info;
         config = OTSConnectionConfiguration.parse(url, info);
-        otsClient = new SyncClient(config.getEndPoint(), config.getAccessKeyId(), config.getAccessKeySecret(), config.getInstanceName(), config.getClientConfiguration());
+        otsClient = new AsyncClient(config.getEndPoint(), config.getAccessKeyId(), config.getAccessKeySecret(), config.getInstanceName(), config.getClientConfiguration());
     }
 
     @Override
@@ -137,6 +144,7 @@ public class OTSConnection extends WrapperAdapter implements Connection {
 
     @Override
     public void close() {
+        LOGGER.debug("close connection");
         if (!isClosed) {
             otsClient.shutdown();
             isClosed = true;
@@ -176,6 +184,7 @@ public class OTSConnection extends WrapperAdapter implements Connection {
 
     @Override
     public void setCatalog(String catalog) throws SQLException {
+        LOGGER.debug("setCatalog");
         checkClosed();
         config.setInstanceName(catalog);
         reconnect();
@@ -281,6 +290,7 @@ public class OTSConnection extends WrapperAdapter implements Connection {
 
     @Override
     public void setClientInfo(String name, String value) throws SQLClientInfoException {
+        LOGGER.debug("setClientInfo");
         try {
             checkClosed();
             info.setProperty(name, value);
@@ -298,6 +308,7 @@ public class OTSConnection extends WrapperAdapter implements Connection {
 
     @Override
     public void setClientInfo(Properties properties) throws SQLClientInfoException {
+        LOGGER.debug("setClientInfo");
         try {
             checkClosed();
             info = properties;
@@ -340,9 +351,8 @@ public class OTSConnection extends WrapperAdapter implements Connection {
 
     @Override
     public void setNetworkTimeout(Executor executor, int milliseconds) throws SQLException {
-        checkClosed();
-        info.setProperty(CONNECTION_REQUEST_TIMEOUT_IN_MILLISECOND, String.valueOf(milliseconds));
-        reconnect();
+        // Do nothing because the driver does not support setting network timeout dynamically.
+        // No exception because HikariCP will call this method to check connection aliveness.
     }
 
     @Override
@@ -351,9 +361,11 @@ public class OTSConnection extends WrapperAdapter implements Connection {
     }
 
     private void reconnect() throws SQLException {
+        LOGGER.debug("reconnect");
         otsClient.shutdown();
         config = OTSConnectionConfiguration.parse(url, info);
-        otsClient = new SyncClient(config.getEndPoint(), config.getAccessKeyId(), config.getAccessKeySecret(), config.getInstanceName(), config.getClientConfiguration());
+        otsClient = new AsyncClient(config.getEndPoint(), config.getAccessKeyId(), config.getAccessKeySecret(), config.getInstanceName(), config.getClientConfiguration());
+        LOGGER.debug("reconnect success");
     }
 
     private void checkClosed() throws SQLException {

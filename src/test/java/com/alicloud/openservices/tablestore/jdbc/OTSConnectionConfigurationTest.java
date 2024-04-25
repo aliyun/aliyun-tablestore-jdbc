@@ -1,6 +1,7 @@
 package com.alicloud.openservices.tablestore.jdbc;
 
 import com.alicloud.openservices.tablestore.ClientConfiguration;
+import com.alicloud.openservices.tablestore.model.DefaultRetryStrategy;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -192,5 +193,36 @@ public class OTSConnectionConfigurationTest {
             Assert.assertEquals(String.format("%s doesn't match.", driverPropertyInfo.name),
                     expectedProperties.get(driverPropertyInfo.name), driverPropertyInfo.value);
         }
+    }
+
+    @Test
+    public void testSetNetworkTimeout() throws SQLException {
+        Connection connection = DriverManager.getConnection("jdbc:ots:https://access_key_id:access_key_secret@example.com/instance_name");
+        Assert.assertTrue(connection instanceof OTSConnection);
+        Assert.assertEquals(-1, connection.getNetworkTimeout());
+        connection.setNetworkTimeout(null, 1000);
+        Assert.assertEquals(-1, connection.getNetworkTimeout());
+    }
+
+    @Test
+    public void testSetRetryStrategy() throws SQLException {
+        Connection connection = DriverManager.getConnection("jdbc:ots:https://access_key_id:access_key_secret@example.com/instance_name");
+        Assert.assertTrue(connection instanceof OTSConnection);
+        OTSConnectionConfiguration configuration = ((OTSConnection) connection).config;
+        Assert.assertTrue(configuration.getClientConfiguration().getRetryStrategy() instanceof DefaultRetryStrategy);
+        // disable retry strategy
+        Properties info = new Properties();
+        info.setProperty(OTSConnection.RETRY_STRATEGY, "disable");
+        connection = DriverManager.getConnection("jdbc:ots:https://access_key_id:access_key_secret@example.com/instance_name", info);
+        Assert.assertTrue(connection instanceof OTSConnection);
+        configuration = ((OTSConnection) connection).config;
+        Assert.assertTrue(configuration.getClientConfiguration().getRetryStrategy() instanceof DisableRetryStrategy);
+        // default retry strategy
+        info = new Properties();
+        info.setProperty(OTSConnection.RETRY_STRATEGY, "default");
+        connection = DriverManager.getConnection("jdbc:ots:https://access_key_id:access_key_secret@example.com/instance_name", info);
+        Assert.assertTrue(connection instanceof OTSConnection);
+        configuration = ((OTSConnection) connection).config;
+        Assert.assertTrue(configuration.getClientConfiguration().getRetryStrategy() instanceof DefaultRetryStrategy);
     }
 }

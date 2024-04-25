@@ -6,10 +6,15 @@ import com.alicloud.openservices.tablestore.model.sql.SQLQueryResponse;
 import com.alicloud.openservices.tablestore.model.sql.SQLStatementType;
 
 import java.sql.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class OTSStatement extends WrapperAdapter implements Statement {
 
     private final OTSConnection connection;
+    private long syncClientWaitFutureTimeoutInMillis;
     private int maxFieldSize = 0;
     protected int resultSetMaxRows = 0;
     private OTSResultSet resultSet;
@@ -18,6 +23,7 @@ public class OTSStatement extends WrapperAdapter implements Statement {
 
     OTSStatement(OTSConnection conn) {
         connection = conn;
+        syncClientWaitFutureTimeoutInMillis = conn.config.getClientConfiguration().getSyncClientWaitFutureTimeoutInMillis();
     }
 
     @Override
@@ -48,7 +54,8 @@ public class OTSStatement extends WrapperAdapter implements Statement {
     }
 
     @Override
-    public void closeOnCompletion() {}
+    public void closeOnCompletion() {
+    }
 
     @Override
     public int[] executeBatch() throws SQLException {
@@ -92,7 +99,8 @@ public class OTSStatement extends WrapperAdapter implements Statement {
         checkClosed();
         SQLQueryRequest request = new SQLQueryRequest(sql);
         try {
-            SQLQueryResponse response = this.connection.otsClient.sqlQuery(request);
+            Future<SQLQueryResponse> res = this.connection.otsClient.sqlQuery(request, null);
+            SQLQueryResponse response = waitForFuture(res);
             if (response.getSQLStatementType() == SQLStatementType.SQL_SELECT
                     || response.getSQLStatementType() == SQLStatementType.SQL_SHOW_TABLE
                     || response.getSQLStatementType() == SQLStatementType.SQL_DESCRIBE_TABLE) {
@@ -186,13 +194,20 @@ public class OTSStatement extends WrapperAdapter implements Statement {
 
     @Override
     public int getQueryTimeout() {
-        return connection.config.getClientConfiguration().getConnectionRequestTimeoutInMillisecond() / 1000;
+        return (int) (syncClientWaitFutureTimeoutInMillis / 1000);
     }
 
     @Override
     public void setQueryTimeout(int seconds) throws SQLException {
         checkClosed();
-        connection.setNetworkTimeout(null, seconds * 1000);
+        if (seconds < 0) {
+            throw new SQLException("timeout must be >= 0");
+        }
+        if (seconds == 0) {
+            syncClientWaitFutureTimeoutInMillis = connection.config.getClientConfiguration().getSyncClientWaitFutureTimeoutInMillis();
+            return;
+        }
+        syncClientWaitFutureTimeoutInMillis = seconds * 1000L;
     }
 
     @Override
@@ -263,6 +278,18 @@ public class OTSStatement extends WrapperAdapter implements Statement {
     protected void checkClosed() throws SQLException {
         if (isClosed) {
             throw new SQLException("the statement has been closed");
+        }
+    }
+
+    private <Res> Res waitForFuture(Future<Res> f) throws SQLException {
+        try {
+            return f.get(syncClientWaitFutureTimeoutInMillis, TimeUnit.MILLISECONDS);
+        } catch(InterruptedException e) {
+            throw new SQLException("request interrupted", e);
+        } catch(ExecutionException e) {
+            throw new SQLException("request aborted", e);
+        } catch (TimeoutException e) {
+            throw new SQLException("request timeout", e);
         }
     }
 }

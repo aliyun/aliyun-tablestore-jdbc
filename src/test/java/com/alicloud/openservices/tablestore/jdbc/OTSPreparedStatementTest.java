@@ -15,6 +15,7 @@ import java.net.URL;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 public class OTSPreparedStatementTest {
 
@@ -37,7 +38,8 @@ public class OTSPreparedStatementTest {
 
     @Test
     public void testInterpolateParameters() throws SQLException, MalformedURLException {
-        OTSPreparedStatement statement = new OTSPreparedStatement(null, "SELECT * FROM t WHERE a = ?");
+        OTSConnection connection = new OTSConnection("jdbc:ots:https://access_key_id:access_key_secret@example.com/instance_name", new Properties());
+        OTSPreparedStatement statement = new OTSPreparedStatement(connection, "SELECT * FROM t WHERE a = ?");
         Assert.assertEquals("SELECT * FROM t WHERE a = NULL", statement.interpolateParameters());
 
         // test boolean
@@ -133,7 +135,8 @@ public class OTSPreparedStatementTest {
 
     @Test
     public void testSetObject() throws SQLException, MalformedURLException {
-        OTSPreparedStatement statement = new OTSPreparedStatement(null, "SELECT * FROM t WHERE a = ?");
+        OTSConnection connection = new OTSConnection("jdbc:ots:https://access_key_id:access_key_secret@example.com/instance_name", new Properties());
+        OTSPreparedStatement statement = new OTSPreparedStatement(connection, "SELECT * FROM t WHERE a = ?");
         Assert.assertEquals("SELECT * FROM t WHERE a = NULL", statement.interpolateParameters());
 
         // test boolean

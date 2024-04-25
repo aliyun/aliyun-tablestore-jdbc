@@ -263,7 +263,7 @@ public class OTSDriverTest {
         properties.setProperty("syncClientWaitFutureTimeoutInMillis", "1");
         Connection connection = DriverManager.getConnection(testEnvironment.getURL(), properties);
         Statement statement = connection.createStatement();
-        Assert.assertThrows(ClientException.class, () -> statement.executeQuery("SELECT * FROM " + testEnvironment.getTableName()));
+        Assert.assertThrows(SQLException.class, () -> statement.executeQuery("SELECT * FROM " + testEnvironment.getTableName()));
 
         // test setClientInfo
         connection.setClientInfo("syncClientWaitFutureTimeoutInMillis", "1000");

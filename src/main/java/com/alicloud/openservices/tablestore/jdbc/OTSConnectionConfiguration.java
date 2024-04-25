@@ -1,11 +1,15 @@
 package com.alicloud.openservices.tablestore.jdbc;
 
 import com.alicloud.openservices.tablestore.ClientConfiguration;
+import com.alicloud.openservices.tablestore.model.DefaultRetryStrategy;
+import com.alicloud.openservices.tablestore.model.RetryStrategy;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.util.Locale;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 class OTSConnectionConfiguration {
 
@@ -86,6 +90,7 @@ class OTSConnectionConfiguration {
         clientConfiguration.setEnableResponseContentMD5Checking(Boolean.parseBoolean(info.getProperty(
                 OTSConnection.ENABLE_RESPONSE_CONTENT_MD5_CHECKING,
                 String.valueOf(clientConfiguration.isEnableResponseContentMD5Checking()))));
+        clientConfiguration.setRetryStrategy(parseRetryStrategy(info, clientConfiguration.getRetryStrategy()));
         clientConfiguration.setTimeThresholdOfTraceLogger(Integer.parseInt(info.getProperty(
                 OTSConnection.TIME_THRESHOLD_OF_TRACE_LOGGER,
                 String.valueOf(clientConfiguration.getTimeThresholdOfTraceLogger()))));
@@ -137,5 +142,42 @@ class OTSConnectionConfiguration {
 
     public void setInstanceName(String instanceName) {
         this.instanceName = instanceName;
+    }
+
+    private static RetryStrategy parseRetryStrategy(Properties info, RetryStrategy defaultStrategy) throws SQLException {
+        if (info.containsKey(OTSConnection.RETRY_STRATEGY)) {
+            String retryStrategy = info.getProperty(OTSConnection.RETRY_STRATEGY);
+            if (retryStrategy.equals("disable")) {
+                return new DisableRetryStrategy();
+            } else if (retryStrategy.equals("default")) {
+                int timeout = Integer.parseInt(info.getProperty(OTSConnection.RETRY_TIMEOUT, "10"));
+                TimeUnit timeUnit = parseTimeUnit(info.getProperty(OTSConnection.RETRY_TIMEOUT_UNIT, "seconds"));
+                return new DefaultRetryStrategy(timeout, timeUnit);
+            } else {
+                throw new SQLException("unsupported retry strategy: " + retryStrategy);
+            }
+        }
+        return defaultStrategy;
+    }
+
+    private static TimeUnit parseTimeUnit(String timeUnit) {
+        switch (timeUnit.toLowerCase(Locale.ROOT)) {
+            case "seconds":
+                return TimeUnit.SECONDS;
+            case "milliseconds":
+                return TimeUnit.MILLISECONDS;
+            case "microseconds":
+                return TimeUnit.MICROSECONDS;
+            case "nanoseconds":
+                return TimeUnit.NANOSECONDS;
+            case "minutes":
+                return TimeUnit.MINUTES;
+            case "hours":
+                return TimeUnit.HOURS;
+            case "days":
+                return TimeUnit.DAYS;
+            default:
+                throw new IllegalArgumentException("unsupported time unit: " + timeUnit);
+        }
     }
 }
